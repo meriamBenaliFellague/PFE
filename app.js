@@ -53,17 +53,26 @@ app.use("/api/Admin",loginAdmin);
 const loginUser = require("./server/UserLogin");
 app.use("/api/UserLogin",loginUser);
 
-const createAccountUser = require("./server/UserRegist");
-app.use("/api", createAccountUser);
+const createtUser = require("./server/CreateUser");
+app.use("/api", createtUser);
+
+const displayUser = require("./server/DisplayUser");
+app.use("/api/displayUser", displayUser);
 
 const deletUser = require("./server/DeletUser");
-app.use("/api/deletReclamation", deletUser);
+app.use("/api/DeleteUser", deletUser);   
+
+const update_user = require("./server/UpdateUser");
+app.use("/api/UpdateUser", update_user);
 
 const display_reclamation_client = require("./server/DisplayReclamationClient");
 app.use("/api/DisplayReclamationClient", display_reclamation_client);
 
 const display_reclamation_admin = require("./server/DisplayReclamationAdmin");
 app.use("/api/DisplayReclamationAdmin", display_reclamation_admin);
+
+const update_reclamation_status_admin = require("./server/UpdateReclamationStatusAdmin");
+app.use("/api/UpdateReclamationAdmin", update_reclamation_status_admin);
 
 //.....
 

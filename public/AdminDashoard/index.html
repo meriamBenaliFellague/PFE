@@ -209,7 +209,7 @@
 				</div>
 
 				<!-- Team Groups -->
-				<div class="team-groups">
+				<div class="team-groups" id="team-groups">
 					<!-- Tech Support Team -->
 					<div class="team-card">
 						<div class="team-header">
@@ -726,18 +726,18 @@ let selectedGroupValue = null;
  });
 // Assign action
  document.querySelector('.assign-btn').addEventListener('click', function() {
-   if(selectedAssignCell && selectedGroupValue) {
+   if(selectedGroupValue) {
      // Hide the assign icon
      selectedAssignCell.querySelector('.assignee-icon').style.display = 'none';
      // Change the status to Process
-     const row = selectedAssignCell.closest('tr');
+    /* const row = selectedAssignCell.closest('tr');
      if(row) {
        const statusCell = row.querySelector('td:last-child span.status');
        if(statusCell) {
-         statusCell.textContent = 'Process';
+         statusCell.textContent = 'In Progress';
          statusCell.className = 'status process';
        }
-     }
+     }*/
      // Hide modal and overlay
      document.getElementById('assign-overlay').style.display = 'none';
      document.getElementById('assign-modal').style.display = 'none';

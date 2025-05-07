@@ -1,7 +1,8 @@
 const { Router } = require("express");
 const { default: mongoose } = require("mongoose");
 const { SchemaClient } = require("../model/database"); 
-const { SchemaUser } = require("../model/UserDB"); 
+const { SchemaUser } = require("../model/UserDB");
+const { SchemaTeam } = require("../model/TeamDB");  
 const {SchemaReclamation} = require("../model/ReclamationDB"); 
 const AdminDb = mongoose.connection.collection("admin");
 const ReclamationDb = mongoose.connection.collection("reclamation");
@@ -11,6 +12,7 @@ const upload = multer({ storage: storage });
 
 
 const bcrypt = require('bcrypt');
+
 
 async function hashPassword(password) {
   if (!password) {
@@ -67,48 +69,56 @@ async function create_account(req, res){
   }
 }
 
-//create count user (Admin)
-async function create_accountUser(req, res){
-  //const account = new register({ id: 1, username: "meriam", email: "be2430423", password: "1234" });
-  const { username, email, password } = req.body;
-  console.log(username)
-  const id = `post${Math.floor(Math.random() * 100000)}`;
-  //const hashedPassword = await bcrypt.hash(password, 10); // الرقم 10 هو مستوى التشفير
-  const account = new SchemaUser({ id, username, email, password});
-  account
-    .save()
-    .then((result) => res.status(201).json(result))
-    .catch((err) => res.status(400).json({ message: err.message }));
-};
 
-//delet count user (Admin)
-async function delet_accountUser(req, res){
-  const id = req.params.id;
-  SchemaUser.findByIdAndDelete(id)
+//delet user (Admin)
+async function delet_user(req, res){
+  const iduser = req.params.iduser;
+  SchemaTeam.findByIdAndDelete(iduser)
     .then((results) =>
-      res.status(200).json({ message: "account deletes successfully" })
+      res.status(200).json(results)
     )
     .catch((err) => res.status(500).json({ message: err.message }));
 };
 
-//create group (Admin)
-async function create_group(req, res){
-  //const account = new register({ id: 1, username: "meriam", email: "be2430423", password: "1234" });
-  const { nameResponsable, Members, type } = req.body;
-  const id = `post${Math.floor(Math.random() * 100000)}`;
-  const account = new SchemaUser({ id, nameResponsable, Members, type});
+//update user (Admin)
+async function update_user(req,res){
+  const { Fullname, Email, Password, Team, Role } = req.body;
+  const iduser = req.params.iduser;
+  const update = SchemaTeam.findByIdAndUpdate(iduser, { Fullname, Email, Password, Team, Role}, { new: true })
+  console.log(update);
+ update 
+    .then((results) => res.status(200).json(results)) 
+    .catch((err) => res.status(500).json({ message: err.message }));
+}
+
+//create user (Admin)
+async function create_user(req, res){console.log(req.body);
+  const { Fullname, Email, Password, Team, Role} = req.body;
+  const account = new SchemaTeam({ Fullname, Email, Password, Team, Role});
+  console.log(account);
   account
     .save()
     .then((result) => res.status(201).json(result))
     .catch((err) => res.status(400).json({ message: err.message }));
 };
+
+//display users
+async function display_user(req,res){
+  try {
+    const users = await SchemaTeam.find();
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
+  }
+}
 
 //login user
 async function login_accountUser(req,res){
 // const username= "meriam";
 //const password= "1234";
-  const { username,password } = req.body;
-  const user = await SchemaUser.findOne({ username});
+  const { fullname,password,team} = req.body;
+  const {role} = "Team lead";
+  const user = await SchemaUser.findOne({ fullname,team,role});
 if (user && await bcrypt.compare(password, user.password)) {
   //The account exists
   console.log("the account exists");
@@ -184,36 +194,35 @@ async function display_reclamationResponsable(req,res){
   }
 }
 
-
 //display New reclamation to Admin
 async function display_New_reclamation(req,res){
   try {
     const reclamations = await SchemaReclamation.find();
-    console.log("عدد الشكاوى:", reclamations.length);
-
+    
     if (reclamations.length === 0) {
       return res.status(400).json({ message: "Aucune réclamation en attente." });
     }
     res.status(200).json(reclamations);
   } catch (err) {
-    res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
+    res.status(500).json({ error: err.message});
   }
 }
 
 //Update reclamation status
   //Admin
-  async function Admin(req,res){
-    const { Group, Note} = req.body;
+  async function Admin(req,res){console.log(req.body)
+    const { Group} = req.body;
     const IdReclamation = req.params.IdReclamation;
-    const  responsableId = req.params.IdResponsable;
-    if (Group != null) {
-      const {Status} = "In Progress";
-    } else {
-      const {Status} = "Not resolved"
+    let Status; 
+    try{
+      if (Group != null) {
+        Status = "In Progress";
+      }console.log(Status)
+      const update = await SchemaReclamation.findByIdAndUpdate(IdReclamation, {Status , Group}, { new: true })
+      res.status(200).json(update);
+    }catch(err){
+      res.status(500).json({ error: err.message });
     }
-    SchemaReclamation.findByIdAndUpdate(id, { Status , Note ,  responsableId}, { new: true })
-      .then((results) => res.status(200).json(results))
-      .catch((err) => res.status(500).json({ message: err.message }));
   }
   //Responsable
   async function Responsable(req,res){
@@ -224,6 +233,7 @@ async function display_New_reclamation(req,res){
       .catch((err) => res.status(500).json({ message: err.message }));
   }
 
-module.exports = {create_account, login_account,create_accountUser,login_accountUser,login_accountAdmin,
-  create_reclamation,delet_accountUser,Admin, Responsable,display_reclamationClient,display_New_reclamation
+module.exports = {create_account, login_account,create_user,login_accountUser,login_accountAdmin,
+  create_reclamation,update_user,delet_user,Admin, Responsable,display_reclamationClient,
+  display_New_reclamation,display_user
 };

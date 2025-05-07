@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
-const { SchemaClient } = require("../model/database");
-const { SchemaUser } = require("../model/UserDB");  
+const { SchemaClient } = require("../model/database"); 
 const Schema = mongoose.Schema;
 
 const reclamation = new Schema(
@@ -9,10 +8,6 @@ const reclamation = new Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "SchemaClient",
       required: true,
-    },
-    responsableId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SchemaUser",
     },
     id: {
       type: String,
@@ -69,9 +64,9 @@ const reclamation = new Schema(
     Note: {//خاص ب responsable de group
       type: String,
     },
-    /*Group: {//خاص ب admin
+    Group: {//خاص ب admin
       type: String,
-    }*/
+    }
   },
   {
     timestamps: true,

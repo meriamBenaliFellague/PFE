@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", function () {
 const allSideMenu = document.querySelectorAll('#sidebar .side-menu.top li a');
 
 allSideMenu.forEach(item=> {
@@ -9,7 +10,7 @@ allSideMenu.forEach(item=> {
 		})
 		li.classList.add('active');
 	})
-});
+})});
 // TOGGLE SIDEBAR
 const menuBar = document.querySelector('#content nav .bx.bx-menu');
 const sidebar = document.getElementById('sidebar');
@@ -17,12 +18,6 @@ const sidebar = document.getElementById('sidebar');
 menuBar.addEventListener('click', function () {
 	sidebar.classList.toggle('hide');
 })
-
-
-
-
-
-
 
 const searchButton = document.querySelector('#content nav form .form-input button');
 const searchButtonIcon = document.querySelector('#content nav form .form-input button .bx');
@@ -40,17 +35,12 @@ searchButton.addEventListener('click', function (e) {
 	}
 })
 
-
-
-
-
 if(window.innerWidth < 768) {
 	sidebar.classList.add('hide');
 } else if(window.innerWidth > 576) {
 	searchButtonIcon.classList.replace('bx-x', 'bx-search');
 	searchForm.classList.remove('show');
 }
-
 
 window.addEventListener('resize', function () {
 	if(this.innerWidth > 576) {
@@ -779,24 +769,31 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Team Management
+const addMemberModal = document.getElementById('add-member-modal');
 document.addEventListener('DOMContentLoaded', function() {
 	const teamLink = document.querySelector('a[href="#"]:has(.bxs-group)');
 	const teamSection = document.getElementById('team-section');
 	const addMemberBtn = document.getElementById('add-member-btn');
-	const addMemberModal = document.getElementById('add-member-modal');
 	const saveMemberBtn = document.getElementById('save-member');
 	const passwordToggle = document.querySelector('.password-toggle');
 	const passwordInput = document.getElementById('member-password');
 
 	// Show team section when clicking on Team link
+	let hasDisplayed = false;
+
 	teamLink.addEventListener('click', function(e) {
     e.preventDefault();
+
     hideAllSections();
     document.getElementById('team-section').style.display = 'block';
     document.querySelectorAll('#sidebar .side-menu li').forEach(item => {
         item.classList.remove('active');
     });
     this.parentElement.classList.add('active');
+	if (!hasDisplayed) {
+        DisplayUsers();
+        hasDisplayed = true; // ✅ يمنع تكرار الاستدعاء
+    }
 });
 
 const analyticsLink = document.getElementById('analytics-link');
@@ -825,18 +822,13 @@ analyticsLink.addEventListener('click', function(e) {
 		addMemberModal.style.display = 'flex';
 	});
 
-	// Close modal
+	
+
+	// Hide add member modal
 	document.querySelectorAll('.close-modal').forEach(btn => {
 		btn.addEventListener('click', function() {
 			addMemberModal.style.display = 'none';
 		});
-	});
-
-	// Close modal on outside click
-	addMemberModal.addEventListener('click', function(e) {
-		if (e.target === addMemberModal) {
-			addMemberModal.style.display = 'none';
-		}
 	});
 
 	// Save new member or edit
@@ -1207,7 +1199,6 @@ async function DisplayReclamations(){
         }
     
         const reclamations = await response.json();
-		console.log("📦 عدد الشكاوى:", reclamations.length);
         renderReclamations(reclamations);
         // هنا تقدر تعرضهم فـ DOM حسب الشكل لي تحب
       } catch (error) {
@@ -1215,15 +1206,93 @@ async function DisplayReclamations(){
       }
 }
 
+//Updat reclamation status
+let selecteMember;
+function selectMember(element){
+	// نزع التحديد من الآخرين
+	document.querySelectorAll('.member-item').forEach(item => {
+		item.classList.remove('selected');
+	});
+
+	// نضيف التحديد على هذا
+	element.classList.add('selected');
+
+	selecteMember = element.textContent.trim();
+	
+	// نفعل زر assign
+	document.getElementById('assign-button').disabled = false;
+}
+async function UpdateReclamations(r){
+	const btnAssign = document.getElementById('assign-button');
+	// نمسح المستمع السابق (لتفادي التكرار)
+	btnAssign.replaceWith(btnAssign.cloneNode(true)); // Trick باش نضمن كل مرة نضيف مستمع واحد فقط
+	
+	const newBtnAssign = document.getElementById('assign-button');
+	newBtnAssign.addEventListener('click' ,async function(e){
+		e.preventDefault();
+		if (!selecteMember) {
+			alert("يرجى اختيار عضو أولاً");
+			return;
+		} 
+			// Hide the assign icon
+			selectedAssignCell.querySelector('.assignee-icon').style.display = 'none';
+			// Change the status to Process
+			console.log(selectedAssignCell);
+			
+			// Hide modal and overlay
+			document.getElementById('assign-overlay').style.display = 'none';
+			document.getElementById('assign-modal').style.display = 'none';
+		try {  
+			const response = await fetch(`http://localhost:3000/api/UpdateReclamationAdmin/${r._id}`, {
+			  method: "PUT",
+			  headers: {
+                "Content-Type": "application/json"
+            },
+             
+            body: JSON.stringify({ 
+            Group : selecteMember })  
+			});
+			
+			if (!response.ok) {
+			  throw new Error("فشل في جلب البيانات");
+			}
+			DisplayReclamations();
+			// هنا تقدر تعرضهم فـ DOM حسب الشكل لي تحب
+		  } catch (error) {
+			console.error("❌ خطأ في تحديث الشوى", error);
+		  }
+
+	})
+}
+
 function renderReclamations(reclamations) {
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = ""; 
-	console.log("📦 عدد الشكاوى:", reclamations.length);
-    console.log("🔍 الشكاوى:", reclamations);
 
     reclamations.forEach(r => {
 		const dateOnly = r.createdAt.substring(0, 10);
         const item = document.createElement("tr");
+		let statusClass;
+		if(r.Status == 'Pending'){
+			statusClass = 'pending';
+		}else if(r.Status == 'In Progress'){
+			statusClass = 'process';
+		}else{
+			statusClass = 'solved';
+		}
+		if(r.Group != null){
+			item.innerHTML = `
+		        <td>
+	                <p>${r.Name} ${r.Surname}</p>
+	            </td>
+		        <td>${dateOnly}</td>
+				<span class="assigned-member" style="color: #1976d2; font-weight: 500;">
+					<i class='bx bx-user' style="margin-right: 5px;"></i>
+					${r.Group}
+				</span>
+				<td><span class="status ${statusClass}">${r.Status}</span></td>
+			`;
+		}else{
         item.innerHTML = `
         <td>
 	        <p>${r.Name} ${r.Surname}</p>
@@ -1232,10 +1301,15 @@ function renderReclamations(reclamations) {
 		<td  class="assignee-cell">
 			<a href="#" class="assignee-icon"  data-toggle="modal" data-target="#assign-modal">
 		        <i class='bx bx-user-plus'></i>
-			</a>
+			</a>  
 		</td>
-		<td><span class="status pending">${r.Status}</span></td>
-      `;
+		<td><span class="status ${statusClass}">${r.Status}</span></td>
+      ` ;}
+	    item.onclick = () => {
+			UpdateReclamations(r);
+		};
+		
+
 	  const modal = document.getElementById('assign-modal');
 	const assignButton = document.getElementById('assign-button');
 	const closeButton = document.querySelector('.close-modal');
@@ -1243,7 +1317,7 @@ function renderReclamations(reclamations) {
 
 	// Handle assign icon clicks
 	document.querySelectorAll('.assignee-icon').forEach(icon => {
-		icon.addEventListener('click', function(e) {console.log('click');
+		icon.addEventListener('click', function(e) {
 			e.preventDefault();
 			selectedAssignCell = this.closest('.assignee-cell');
 			modal.style.display = 'flex';
@@ -1260,3 +1334,385 @@ function renderReclamations(reclamations) {
     });
   }
   window.onload = DisplayReclamations;
+
+//manage team
+const addMember = document.getElementById('add-member-btn');
+const btnAdd = document.getElementById('save-member');
+//add user
+addMember.addEventListener('click' , async function(){
+btnAdd.addEventListener('click', async function(e){console.log('Add function')
+	e.preventDefault();
+	const fullname = document.getElementById('member-name').value;
+	const email = document.getElementById('member-email').value;
+	const passwordTeam = document.getElementById('member-password').value;
+	const teamAssign = document.getElementById('member-team').value;
+	const roleTeam = document.getElementById('member-role').value;
+
+	try {
+		const response = await fetch("http://localhost:3000/api/CreateUser", {
+		  method: "POST",
+		  headers: {
+			"Content-Type": "application/json"
+		},
+		  body: JSON.stringify({
+			Fullname: fullname,
+			Email: email,
+			Password: passwordTeam,
+			Team: teamAssign,
+			Role: roleTeam 
+		  }) 
+		});
+	    // Close modal
+	document.querySelectorAll('.close-modal').forEach(btn => {
+		btn.addEventListener('click', function() {
+			addMemberModal.style.display = 'none';
+		});
+	});
+
+	// Close modal on outside click
+	addMemberModal.addEventListener('click', function(e) {
+		if (e.target === addMemberModal) {
+			addMemberModal.style.display = 'none';
+		}
+	});
+		const data = await response.json();
+		alert('تمت العملية بنجاح');
+		addMemberModal.style.display = 'none';
+		notificationSystem.addNotification('assign', `New team member ${u.Fullname} added to ${u.Team}`);
+	} catch (error) {
+		console.error("Error fetching data:", error);
+	}
+})
+})
+//display users
+async function DisplayUsers(){
+    try {
+        const response = await fetch("http://localhost:3000/api/displayUser", {
+          method: "GET",
+        });
+    
+        if (!response.ok) {
+          throw new Error("فشل في جلب البيانات");
+        }
+    
+        const users = await response.json();console.log(users);
+        renderUsers(users);
+        // هنا تقدر تعرضهم فـ DOM حسب الشكل لي تحب
+      } catch (error) {
+        console.error("❌ خطأ في جلب الشكاوى:", error);
+      }
+}
+/*
+let idUser;
+function createMemberElement(member) {
+	const div = document.createElement('div');
+	div.innerHTML = "";
+	div.className = 'team-member';
+	div.innerHTML = `
+		<div class="member-info">
+			<div class="member-avatar">
+				<i class='bx bx-user'></i>
+			</div>
+			<div class="member-details">
+				<h4>${member.name}</h4>
+				<p>${member.role} · ${member.email}</p>
+			</div>
+		</div>
+		<div class="member-actions">
+			<button class="edit" title="Edit Member">
+				<i class='bx bx-edit'></i>
+			</button>
+			<button class="delete" title="Remove Member">
+				<i class='bx bx-trash'></i>
+			</button>
+		</div>
+	`;
+	div.onclick = () => {
+		 idUser = member._id;
+	}
+	// Add edit functionality
+	div.querySelector('.edit').addEventListener('click', function() {
+		// Fill modal with current member data
+		document.getElementById('member-name').value = member.name;
+		document.getElementById('member-email').value = member.email;
+		document.getElementById('member-role').value = member.role;
+		document.getElementById('member-team').value = member.team;
+		document.getElementById('member-password').value = '';
+		
+		// Show modal
+		addMemberModal.style.display = 'flex';	
+		const btnAdd = document.getElementById('save-member');
+		// Change save button to edit mode
+		
+		btnAdd.textContent = 'Save Changes';
+		btnAdd.dataset.editing = 'true';
+		btnAdd.dataset.memberId = member.email; // Use email as unique id
+
+		// Store reference to this member element
+		addMemberModal.dataset.editingMember = '';
+		addMemberModal.editingMemberElement = div;
+	});
+	// Add delete functionality
+	div.querySelector('.delete').addEventListener('click', function() {
+		if (confirm('Are you sure you want to remove this member?')) {
+			div.remove();
+			notificationSystem.addNotification('status', `Team member ${member.name} has been removed`);
+		}
+	});
+	return div;
+}*/
+function getTeamIndex(teamValue) {
+	const teamMap = {
+		'tech-support': 1,
+		'customer-service': 2,
+		'quality': 3
+	};
+	return teamMap[teamValue];
+}
+function renderUsers(user){
+	document.querySelectorAll('.team-members').forEach(container => {
+		container.innerHTML = ''; // تمسح كل العناصر داخل الكونتينر
+	});
+
+	user.forEach(u => {
+		const div = document.createElement('div');
+		div.className = 'team-member';
+	    div.innerHTML = `
+		    <div class="member-info">
+			    <div class="member-avatar">
+				    <i class='bx bx-user'></i>
+			    </div>
+			    <div class="member-details">
+				    <h4>${u.Fullname}</h4>
+				    <p>${u.Role} · ${u.Email}</p>
+			    </div>
+		    </div>
+		    <div class="member-actions">
+			    <button class="edit" title="Edit Member">
+				    <i class='bx bx-edit'></i>
+			    </button>
+			    <button class="delete" title="Remove Member">
+				    <i class='bx bx-trash'></i>
+			    </button>
+		    </div>
+	    `;
+		const teamContainer = document.querySelector(`.team-card:nth-child(${getTeamIndex(u.Team)}) .team-members`);
+			teamContainer.appendChild(div);
+			document.getElementById('add-member-form').reset();
+			let id;
+		div.onclick = () => {
+			UpdateUser(u);console.log(u._id);
+			id = u._id;
+	   }
+	   
+	   // Add edit functionality
+	div.querySelector('.edit').addEventListener('click', function() {
+		// Fill modal with current member data
+		document.getElementById('member-name').value = u.Fullname;
+		document.getElementById('member-email').value = u.Email;
+		document.getElementById('member-role').value = u.Role;
+		document.getElementById('member-team').value = u.Team;
+		document.getElementById('member-password').value = '';
+		
+		// Show modal
+		addMemberModal.style.display = 'flex';	
+		const btnAdd = document.getElementById('save-member');
+		// Change save button to edit mode
+		
+		btnAdd.textContent = 'Save Changes';
+		btnAdd.dataset.editing = 'true';
+		btnAdd.dataset.memberId = u.Email; // Use email as unique id
+
+		// Store reference to this member element
+		addMemberModal.dataset.editingMember = '';
+		addMemberModal.editingMemberElement = div;
+	});
+	// Add delete functionality
+		div.querySelector('.delete').addEventListener('click', function() {
+			if (confirm('Are you sure you want to remove this member?')) {console.log(id)
+				DeleteUser(u._id);
+				notificationSystem.addNotification('status', `Team member ${u.Fullname} has been removed`);
+			}
+		});
+	})
+	
+	
+};
+
+/*	user.forEach(u => {console.log(u.Fullname);
+	if (u.Fullname && u.Email && u.Team && u.Role) {
+		if (btnAdd.dataset.editing === 'true') {
+			// Edit mode
+			const memberElement = addMemberModal.editingMemberElement;
+			memberElement.querySelector('.member-details h4').textContent = u.Fullname;
+			memberElement.querySelector('.member-details p').textContent = `${u.Role} · ${u.Email}`;
+			// Update member object for future edits
+			memberElement.memberData = { 
+				name: u.Fullname,
+                email: u.Email,
+                team: u.Team,
+                role: u.Role };
+
+			// Move to new team if changed 
+			const currentTeamContainer = memberElement.parentElement;
+			const newTeamContainer = document.querySelector(`.team-card:nth-child(${getTeamIndex(u.Team)}) .team-members`);
+			if (currentTeamContainer !== newTeamContainer) {
+				newTeamContainer.appendChild(memberElement);
+			}
+
+			// Reset modal
+			document.getElementById('add-member-form').reset();
+			addMemberModal.style.display = 'none';
+			saveMemberBtn.textContent = 'Add Member';
+			saveMemberBtn.dataset.editing = '';
+			saveMemberBtn.dataset.memberId = '';
+			addMemberModal.editingMemberElement = null;
+
+			notificationSystem.addNotification('status', `Team member ${u.Fullname} updated successfully`);
+		} else{
+			// Add new member mode
+			const memberElement = createMemberElement({
+				name: u.Fullname,
+                email: u.Email,
+                team: u.Team,
+                role: u.Role
+			});console.log(memberElement);
+			const teamContainer = document.querySelector(`.team-card:nth-child(${getTeamIndex(u.Team)}) .team-members`);
+			teamContainer.appendChild(memberElement);
+			document.getElementById('add-member-form').reset();
+		}
+	} else{
+		alert('Please fill in all fields');
+	}});
+}
+	
+}
+btnAdd.addEventListener('click', async function(e){
+	e.preventDefault();
+
+	const fullname = document.getElementById('member-name').value;
+	const email = document.getElementById('member-email').value;
+	const passwordTeam = document.getElementById('member-password').value;
+	const teamAssign = document.getElementById('member-team').value;
+	const roleTeam = document.getElementById('member-role').value;
+
+	const isEditing = btnAdd.dataset.editing === 'true';
+	const memberId = idUser;
+    console.log(idUser);
+	try {
+		let response;
+		if (isEditing) {
+			// UPDATE USER
+			response = await fetch(`http://localhost:3000/api/UpdateUser/${memberId}`, {
+				method: "PUT",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ 
+					Fullname: fullname,
+					Email: email,
+					Password: passwordTeam,
+					Team: teamAssign,
+					Role: roleTeam 
+				})
+			});
+		} else {
+			// CREATE USER
+			response = await fetch("http://localhost:3000/api/CreateUser", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					Fullname: fullname,
+					Email: email,
+					Password: passwordTeam,
+					Team: teamAssign,
+					Role: roleTeam 
+				}) 
+			});
+			
+		}
+
+		const data = await response.json();
+		alert('تمت العملية بنجاح');
+		addMemberModal.style.display = 'none';
+		DisplayUsers();
+
+		notificationSystem.addNotification('assign',
+			isEditing
+				? `Team member ${fullname} updated to ${teamAssign}`
+				: `New team member ${fullname} added to ${teamAssign}`
+		);
+
+		// Reset form and mode
+		document.getElementById('add-member-form').reset();
+		btnAdd.textContent = 'Add Member';
+		btnAdd.dataset.editing = '';
+		btnAdd.dataset.memberId = '';
+
+	} catch (error) {
+		console.error("Error fetching data:", error);
+	}
+});
+*/
+
+//Update user
+
+async function UpdateUser(u){
+	btnAdd.replaceWith(btnAdd.cloneNode(true)); // Trick باش نضمن كل مرة نضيف مستمع واحد فقط
+	
+	const newBtn = document.getElementById('save-member');
+	newBtn.addEventListener('click', async function(e){
+	e.preventDefault();
+	const fullname = document.getElementById('member-name').value;
+	const email = document.getElementById('member-email').value;
+	const passwordTeam = document.getElementById('member-password').value;
+	const teamAssign = document.getElementById('member-team').value;
+	const roleTeam = document.getElementById('member-role').value;
+	if (newBtn.dataset.editing === 'true') {
+	try {
+		const response = await fetch(`http://localhost:3000/api/UpdateUser/${u._id}`, {
+		  method: "PUT",
+		  headers: {
+			"Content-Type": "application/json"
+		},
+		  body: JSON.stringify({ 
+			Fullname: fullname,
+			Email: email,
+			Password: passwordTeam,
+			Team: teamAssign,
+			Role: roleTeam 
+		  }) 
+		});
+		if (!response.ok) {
+			throw new Error("فشل في جلب البيانات");
+		  }
+		addMemberModal.style.display = 'none';
+		notificationSystem.addNotification('assign', ` team member ${u.Fullname} update to ${u.Team}`);
+	    DisplayUsers();
+	} catch (error) {
+		console.error("Error fetching data:", error);
+	}
+}},{ once: true }); 
+}
+
+//delet user
+async function DeleteUser(user) { 
+	
+	try {
+        const response = await fetch(`http://localhost:3000/api/DeleteUser/${user}`, {
+            method: 'DELETE',
+        });   
+
+        if (!response.ok) throw new Error("فشل في حذف المستخدم");
+
+        const result = await response.json();
+        alert("✅ تم الحذف بنجاح");
+        console.log(result)
+        // تحديث القائمة بعد الحذف
+        DisplayUsers(); 
+    } catch (error) { 
+        console.error("❌ خطأ أثناء الحذف:", error.message);
+    }
+}
