@@ -30,9 +30,6 @@ app.use('/Home/LoginAdmin/Dashboard',express.static(path.join(__dirname, "public
 app.use('/Reclamation',express.static(path.join(__dirname, "public/client")));
 
 
-
-
-
 const authRoutes = require("./server/ClientRegist");
 app.use(authRoutes);
 const adminRoutes = require("./server/AdminLogin");
@@ -43,6 +40,15 @@ app.use("/api/register", createAccount);
 
 const loginAccount = require("./server/ClientLogin");
 app.use("/api/login",loginAccount);
+
+const forgetPassword = require("./server/forgetPassword");
+app.use("/api/forgetPassword",forgetPassword);
+
+const verifyResetCode = require("./server/VerifyResetCode");
+app.use("/api/VerifyResetCode",verifyResetCode);
+
+const resetPassword = require("./server/ResetPassword");
+app.use("/api/ResetPassword",resetPassword);
 
 const createReclamation = require("./server/AddReclamation");
 app.use("/api/addReclamation",createReclamation);

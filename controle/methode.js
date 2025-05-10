@@ -10,8 +10,11 @@ const multer = require('multer');
 const storage = multer.memoryStorage(); // باش نخلي الصورة في الذاكرة
 const upload = multer({ storage: storage });
 
-
+const crypto = require("crypto");
 const bcrypt = require('bcrypt');
+
+const SendEmailFunction = require("../utils/SendEmail");
+const { Console } = require("console");
 
 
 async function hashPassword(password) {
@@ -28,6 +31,84 @@ async function hashPassword(password) {
       return null;
   }
 }
+//forget password
+async function forget_password(req, res) {
+  //get user by email
+  const email = req.body.email;
+  console.log(email)
+  const user = await SchemaClient.findOne({email});
+  if(!user){
+    return res.status(404).json({ message: "the account not exists"});
+  }
+  //if user exist generate hash reset random 6 digits and save
+  const code = Math.floor(Math.random() * 100000).toString();
+  const hashCode = crypto
+    .createHash('sha256')
+    .update(code)
+    .digest('hex')
+  user.hashCode = hashCode;
+  //add time for code (10 min)
+  user.timeCode = Date.now() + 10 * 60 * 1000;
+  user.verifiedCode = false;
+
+  await user.save();
+
+  const message = `Hi ${user.username}\n We recived a request to rest the password on your ADE (Algerian waters - Unite Ain Defla) Account.\n ${code} \n Enter this code to complete the reset.\n
+  Thanks for helping us keep your account secure. \n The ADE (Algerian waters - Unite Ain Defla) Team`
+  //send the rest code in email
+  try {
+    await SendEmailFunction({
+      email: user.email,
+      subject: 'Your password reset code (valide for 10 min)',
+      message: message,
+    })
+    return res.status(200).json({ message: "code sent to email"});
+  } catch (err) {
+    user.hashCode = undefined;
+    user.timeCode = undefined;
+    user.verifiedCode = undefined;
+    await user.save();
+    console.log({ message: err})
+    return res.status(500).json({ message: err});
+  }
+}
+
+//verify reset code
+async function verifyResetCode(req, res) {
+  //get reset code
+  const hashCode = crypto
+    .createHash('sha256')
+    .update(req.body.code)
+    .digest('hex')
+
+  const user = await SchemaClient.findOne({hashCode, timeCode:{$gt: Date.now()}});
+  if(!user){
+    return res.status(404).json({ message: "Reset code invalide or expired"});
+  }
+  //reset code valid
+  user.verifiedCode = true;
+  user.save();
+  return res.status(200).json({ message: "Reset code valide"});
+}
+
+//reset password
+async function reset_password(req, res) {
+  //get user by email
+  const user = await SchemaClient.findOne({email: req.body.email});
+  if(!user){
+    return res.status(404).json({ message: "the account not exists"});
+  }
+  if(!user.verifiedCode){
+    return res.status(400).json({ message: "Reset code not verified"});
+  } 
+  //user valide, update user password
+  user.password = req.body.newPass;
+  user.hashCode = undefined;
+  user.timeCode = undefined;
+  user.verifiedCode = undefined;
+  user.save();
+  return res.status(200).json({ message: "Update password "});
+}
 
 //create count client
 async function create_account(req, res){
@@ -35,7 +116,7 @@ async function create_account(req, res){
     //const account = new SchemaClient({ id: 1, username: "meriam", email: "be2430423", password: "1234" });
     const { username, email, password } = req.body;
     console.log(req.body);
-    const id = `post${Math.floor(Math.random() * 100000)}`;
+    const id = `client${Math.floor(Math.random() * 100000)}`;
     /*const hashedPassword = await hashPassword(password) ;
     console.log("PASS", hashedPassword);*/
     const account = new SchemaClient({ id, username, email, password});
@@ -68,7 +149,6 @@ async function create_account(req, res){
       return res.status(500).json({ message: "حدث خطأ في السيرفر" });
   }
 }
-
 
 //delet user (Admin)
 async function delet_user(req, res){
@@ -179,7 +259,7 @@ async function display_reclamationClient(req,res){
     const reclamations = await SchemaReclamation.find({ clientId });
     res.status(200).json(reclamations);
   } catch (err) {
-    res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
+    res.status(500).json({ error: err.message });
   }
 }
 
@@ -235,5 +315,5 @@ async function display_New_reclamation(req,res){
 
 module.exports = {create_account, login_account,create_user,login_accountUser,login_accountAdmin,
   create_reclamation,update_user,delet_user,Admin, Responsable,display_reclamationClient,
-  display_New_reclamation,display_user
+  display_New_reclamation,display_user,forget_password,verifyResetCode,reset_password
 };

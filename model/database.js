@@ -19,6 +19,9 @@ const client = new Schema(
       type: String,
       required: true,
     },
+    hashCode: String,
+    timeCode: Date,
+    verifiedCode: Boolean,
     rec: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "reclamation",
