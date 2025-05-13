@@ -53,7 +53,6 @@ btnL.addEventListener('click', async function (e) {
             password: pass }) 
         });
         const data = await response.json();
-       
         if (data.message === "the account exists") {
             window.location.href = "/Reclamation"; // ✅ انتقال إلى صفحة أخرى
         } else {
@@ -63,3 +62,5 @@ btnL.addEventListener('click', async function (e) {
         console.error("Error fetching data:", error);
     }
 });
+
+//forget password

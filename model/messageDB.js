@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
-const { SchemaUser } = require("../model/UserDB"); 
-const AdminDb = mongoose.connection.collection("admin");
+const { SchemaTeam } = require("../model/TeamDB"); 
 const Schema = mongoose.Schema;
 
 const messageSchema = new Schema({
-  userId: {
+  leaderId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "SchemaUser",
+        ref: "SchemaTeam",
+        required: true,
       },
-  type: String,
+  sender: Boolean,
   message: String,
   createdAt: { type: Date, default: Date.now }
   });

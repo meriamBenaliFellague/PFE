@@ -3,6 +3,11 @@ const Schema = mongoose.Schema;
 
 const team = new Schema(
   {
+    id: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     Fullname: {
         type: String,
         required: true,
@@ -21,7 +26,7 @@ const team = new Schema(
     },
     Role: {
         type: String,
-        required: true,
+        required: true, 
     },
   }
 )  

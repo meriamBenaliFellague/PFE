@@ -65,11 +65,18 @@ app.use("/api", createtUser);
 const displayUser = require("./server/DisplayUser");
 app.use("/api/displayUser", displayUser);
 
+const displayMessage = require("./server/DisplayMessage");
+app.use("/api/DisplayMessages", displayMessage);
+
 const deletUser = require("./server/DeletUser");
 app.use("/api/DeleteUser", deletUser);   
 
 const update_user = require("./server/UpdateUser");
 app.use("/api/UpdateUser", update_user);
+
+const display_leaders = require("./server/DisplayLeader");
+app.use("/api/Displayleader", display_leaders);
+
 
 const display_reclamation_client = require("./server/DisplayReclamationClient");
 app.use("/api/DisplayReclamationClient", display_reclamation_client);
@@ -121,8 +128,8 @@ mongoose
 
 // Chat
 
-const io = require('socket.io')(server);
 
+/*
 io.on('connection', socket => {
 
   // Load old messages
@@ -139,4 +146,89 @@ io.on('connection', socket => {
     socket.broadcast.emit('chat-message', receivedMessage);
     socket.emit('chat-message', sentMessage);
   })
-})
+})*/
+
+const io = require('socket.io')(server);
+const { SchemaTeam } = require("./model/TeamDB");
+const admin = mongoose.connection.collection("admin");
+
+// Socket.IO Logic
+const onlineUsers = new Map(); // Keep track of online users
+
+io.on("connection", (socket) => {
+  console.log("New socket connection:", socket.id);
+  let senderId;
+  // Register user when they connect
+  socket.on("register", async (userId) => {
+    try {
+      // Validate if user is either an admin or a leader
+      const isLeader = await SchemaTeam.findById(userId);
+      const isAdmin = await admin.findOne({ _id: new mongoose.Types.ObjectId(userId) });
+
+      if (isLeader || isAdmin) {  
+        senderId = userId;
+          onlineUsers.set(userId, socket.id);
+          socket.emit("registration_success",userId);
+      } else {
+          socket.emit("registration_error", "Invalid user");
+      }
+  } catch (error) {
+      console.error("Registration error:", error);
+      socket.emit("registration_error", "Server error during registration");
+  }
+  });
+
+  //get receiverId
+  let receiverId;
+  socket.on("get receiverId", async (userID) => {
+    receiverId = userID;
+  })
+  
+
+  // Handle private messages
+  socket.on("private_message", async (message) => {
+    try{let newMsg;
+    const lead = await SchemaTeam.findById(senderId);
+    if(lead){
+      const sender = lead;
+      const receiver = await admin.findOne(); 
+      // Save the message to the database
+        const newMsg = new SchemaMessage({ leaderId: senderId, sender: true, message });
+        await newMsg.save();
+       
+      
+    }else{console.log("admin is sender")
+      const sender = await admin.findOne();
+      const receiver = lead; 
+      // Save the message to the database
+        newMsg = new SchemaMessage({ leaderId: receiverId, sender: false, message });
+        console.log(newMsg);
+        await newMsg.save();
+      
+    }
+
+    // Send the message to the receiver if they're online
+    const receiverSocket = onlineUsers.get(receiverId);
+    console.log(receiverId)
+    if (receiverId) {
+      io.to(receiverId).emit("receive_message", newMsg);
+    }
+    console.log(newMsg);
+    // Send the message back to the sender
+    socket.emit("receive_message", newMsg);
+  } catch (err) {
+    console.error("Message send error:", err);
+  }
+  }); 
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    for (let [userId, sockId] of onlineUsers.entries()) {
+      if (sockId === socket.id) {
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+  });
+});
+module.exports = io;

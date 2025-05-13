@@ -4,6 +4,7 @@ const { SchemaClient } = require("../model/database");
 const { SchemaUser } = require("../model/UserDB");
 const { SchemaTeam } = require("../model/TeamDB");  
 const {SchemaReclamation} = require("../model/ReclamationDB"); 
+const {SchemaMessage} = require("../model/messageDB"); 
 const AdminDb = mongoose.connection.collection("admin");
 const ReclamationDb = mongoose.connection.collection("reclamation");
 const multer = require('multer');
@@ -125,6 +126,7 @@ async function create_account(req, res){
       .then((result) => res.status(201).json(result))
       .catch((err) => res.status(400).json({ message: err.message }));
   };
+
 //login client
   async function login_account(req,res){
     console.log("📥البيانات ة:", req.body);
@@ -172,9 +174,10 @@ async function update_user(req,res){
 }
 
 //create user (Admin)
-async function create_user(req, res){console.log(req.body);
-  const { Fullname, Email, Password, Team, Role} = req.body;
-  const account = new SchemaTeam({ Fullname, Email, Password, Team, Role});
+async function create_user(req, res){
+  const id = `user${Math.floor(Math.random() * 100000)}`;
+  const {Fullname, Email, Password, Team, Role} = req.body;
+  const account = new SchemaTeam({id, Fullname, Email, Password, Team, Role});
   console.log(account);
   account
     .save()
@@ -187,6 +190,27 @@ async function display_user(req,res){
   try {
     const users = await SchemaTeam.find();
     res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
+  }
+}
+
+//display leaders
+async function display_leader(req,res){
+  try {
+    const users = await SchemaTeam.find({Role: "team-lead"});
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
+  }
+}
+
+//display messages
+async function display_message(req,res){
+  const IdLeader = req.params.IdLeader;
+  try {
+    const leaders = await SchemaMessage.find({leaderId: IdLeader});
+    res.status(200).json(leaders);
   } catch (err) {
     res.status(500).json({ error: "Erreur lors du chargement des réclamations" });
   }
@@ -227,7 +251,7 @@ async function login_accountAdmin(req,res){
       return res.status(401).json({ message: "the account not exists" });
   }
     console.log("the account exists");
-    return res.status(201).json({ message:"the account exists"});
+    return res.status(201).json({ message:"the account exists", adminId: user._id});
   }catch (err) {
     console.log("err:", err.message);
     return res.status(500).json({ message: "حدث خطأ في السيرفر" });
@@ -315,5 +339,6 @@ async function display_New_reclamation(req,res){
 
 module.exports = {create_account, login_account,create_user,login_accountUser,login_accountAdmin,
   create_reclamation,update_user,delet_user,Admin, Responsable,display_reclamationClient,
-  display_New_reclamation,display_user,forget_password,verifyResetCode,reset_password
+  display_New_reclamation,display_user,forget_password,verifyResetCode,reset_password,
+  display_leader,display_message
 };

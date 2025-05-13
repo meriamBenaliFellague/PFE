@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const conversations = document.querySelectorAll('.conversation');
 	const chatArea = document.querySelector('.chat-area');
 	const chatMessages = document.querySelector('.chat-messages');
-	const chatInput = document.querySelector('.chat-input textarea');
+	const chatInput = document.getElementById('msg-input');
 	const sendBtn = document.querySelector('.send-btn');
 	const messagesLink = document.getElementById('messages-link');
 	const messagesSection = document.getElementById('messages-section');
@@ -178,27 +178,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		e.preventDefault();
 		// Show messages section
 		messagesSection.style.display = 'block';
-	});
-
-	// Handle conversation clicks
-	conversations.forEach(conversation => {
-		conversation.addEventListener('click', function() {
-			// Remove active class from all conversations
-			conversations.forEach(c => c.classList.remove('active'));
-			// Add active class to clicked conversation
-			this.classList.add('active');
-			
-			// Update chat header
-			const name = this.querySelector('.conversation-name').textContent;
-			const avatar = this.querySelector('.conversation-avatar').innerHTML;
-			document.querySelector('.chat-name').textContent = name;
-			document.querySelector('.chat-avatar').innerHTML = avatar;
-		});
+		DisplayLeaders();
 	});
 
 	// Handle send message
 	function sendMessage() {
 		const message = chatInput.value.trim();
+		socket.emit("private_message",message);
 		if (message) {
 			const messageElement = document.createElement('div');
 			messageElement.className = 'message sent';
@@ -213,7 +199,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// Send message on button click
-	sendBtn.addEventListener('click', sendMessage);
+	sendBtn.addEventListener('click', () => { 
+		sendMessage();
+	});
 
 	// Send message on Enter key
 	chatInput.addEventListener('keypress', function(e) {
@@ -1144,7 +1132,71 @@ const socket = io('http://localhost:3000');
 const messageForm = document.getElementById('msg-form');
 const messageInput = document.getElementById('msg-input');
 const messageContainer = document.getElementById('msg-container');
+const active = document.getElementsByClassName('conversation active');
 
+socket.on("registration_success", (userId) => {
+    console.log("✅ Registered to socket server successfully");
+});
+
+socket.on("registration_error", (msg) => {
+    console.error("❌ Registration failed:", msg);
+});
+
+socket.on("receive_message", (data) => {
+    console.log("📩 New message received:", data.message);
+    // تقدر تزيد الكود باش تعرض الرسائل في واجهة المستخدم
+});
+//Display messages
+async function DisplayMessages(lead){
+    try {
+        const response = await fetch(`http://localhost:3000/api/DisplayMessages/${lead._id}`, {
+          method: "GET",
+        });
+    
+        if (!response.ok) {
+          throw new Error("فشل في جلب البيانات");
+        }
+    
+        const messages = await response.json();
+        renderMessages(messages);
+        // هنا تقدر تعرضهم فـ DOM حسب الشكل لي تحب
+      } catch (error) {
+        console.error("❌ خطأ في جلب الشكاوى:", error);
+      }
+}
+
+async function renderMessages(message){
+	const chatMessages = document.querySelector('.chat-messages');
+	chatMessages.innerHTML = "";
+
+	message.forEach(msg => {
+		const dateOnly =  new Date(msg.createdAt).toLocaleTimeString([], {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: true // حطها true إذا حبيت صيغة 12 ساعة
+		  });
+		const messageElement = document.createElement('div');
+		if(!msg.sender){
+			messageElement.className = 'message sent';
+			messageElement.innerHTML = `
+				<div class="message-content">${msg.message}</div>
+				<div class="message-time">${dateOnly}</div>
+			`;
+			chatMessages.appendChild(messageElement);
+		}else{
+			messageElement.className = 'message received';
+			messageElement.innerHTML = `
+				<div class="message-content">${msg.message}</div>
+				<div class="message-time">${dateOnly}</div>
+			`;
+			chatMessages.appendChild(messageElement);
+		}
+			
+	})
+}
+
+
+/*
 socket.on('load-messages', messages => {
     messages.forEach(msg => {
         if (msg.type === 'sent') {
@@ -1186,7 +1238,76 @@ function appendMessageMe(message){
 	messageContainer.append(messageElmnt);
 	messageContainer.scrollTop = messageContainer.scrollHeight;
 }
+*/
+//Display leader
+async function DisplayLeaders(){
+    try {
+        const response = await fetch("http://localhost:3000/api/Displayleader", {
+          method: "GET",
+        });
+    
+        if (!response.ok) {
+          throw new Error("فشل في جلب البيانات");
+        }
+    
+        const leaders = await response.json();
+		console.log(leaders)
+        renderLeader(leaders);
+        // هنا تقدر تعرضهم فـ DOM حسب الشكل لي تحب
+      } catch (error) {
+        console.error("❌ خطأ في جلب الشكاوى:", error);
+      }
+}
 
+async function renderLeader(lead){
+	const chatContainer = document.getElementById('conversations');
+	chatContainer.innerHTML = "";
+
+	lead.forEach(leader => {
+		const item = document.createElement("div");
+		item.className = "conversation";
+		item.innerHTML = `
+		    <div class="conversation-avatar">
+				<i class='bx bx-user'></i>
+			</div>
+			<div class="conversation-info">
+				<div class="conversation-name">${leader.Fullname}</div>
+				<div class="conversation-preview">Welcome to the dashboard!</div>
+			</div>
+			<div class="conversation-time">10:30 AM</div>
+		 `;
+		 item.onclick = () => {
+			socket.emit("get receiverId", leader._id);
+			DisplayMessages(leader)
+			console.log(leader._id);
+
+			const conversations = document.querySelectorAll('.conversation');
+			// Handle conversation clicks
+
+	conversations.forEach(conversation => {
+		conversation.addEventListener('click', function() {
+			// Remove active class from all conversations
+			conversations.forEach(c =>{
+				console.log("Removing active from:", c);
+				c.classList.remove('active')
+			} );
+			// Add active class to clicked conversation
+			console.log("Adding active to:", this);
+			this.classList.add('active');
+			
+			// Update chat header
+			const name = this.querySelector('.conversation-name').textContent;
+			const avatar = this.querySelector('.conversation-avatar').innerHTML;
+			document.querySelector('.chat-name').textContent = name;
+			document.querySelector('.chat-avatar').innerHTML = avatar;
+		});
+	});
+
+		}; 
+		
+	chatContainer.appendChild(item);
+	});
+}
 //Display Reclamation
 async function DisplayReclamations(){
     try {
@@ -1307,10 +1428,7 @@ function renderReclamations(reclamations) {
       ` ;}
 	    item.onclick = () => {
 			UpdateReclamations(r);
-		};
-		
-
-	  const modal = document.getElementById('assign-modal');
+			const modal = document.getElementById('assign-modal');
 	const assignButton = document.getElementById('assign-button');
 	const closeButton = document.querySelector('.close-modal');
 	const searchInput = document.getElementById('member-search');
@@ -1330,6 +1448,8 @@ function renderReclamations(reclamations) {
 			selectedMember = null;
 		});
 	});
+		};
+		
       tbody.appendChild(item);
     });
   }
@@ -1338,30 +1458,34 @@ function renderReclamations(reclamations) {
 //manage team
 const addMember = document.getElementById('add-member-btn');
 const btnAdd = document.getElementById('save-member');
-//add user
+  //add user
 addMember.addEventListener('click' , async function(){
-btnAdd.addEventListener('click', async function(e){console.log('Add function')
+	btnAdd.replaceWith(btnAdd.cloneNode(true)); // Trick باش نضمن كل مرة نضيف مستمع واحد فقط
+	
+	const newBtn = document.getElementById('save-member');
+newBtn.addEventListener('click', async function(e){console.log('Add function')
 	e.preventDefault();
 	const fullname = document.getElementById('member-name').value;
 	const email = document.getElementById('member-email').value;
 	const passwordTeam = document.getElementById('member-password').value;
 	const teamAssign = document.getElementById('member-team').value;
 	const roleTeam = document.getElementById('member-role').value;
-
-	try {
+	console.log(fullname);
+	try { 
 		const response = await fetch("http://localhost:3000/api/CreateUser", {
 		  method: "POST",
 		  headers: {
 			"Content-Type": "application/json"
 		},
 		  body: JSON.stringify({
-			Fullname: fullname,
+			Fullname: fullname, 
 			Email: email,
 			Password: passwordTeam,
 			Team: teamAssign,
 			Role: roleTeam 
 		  }) 
 		});
+		console.log(response)
 	    // Close modal
 	document.querySelectorAll('.close-modal').forEach(btn => {
 		btn.addEventListener('click', function() {
@@ -1378,13 +1502,15 @@ btnAdd.addEventListener('click', async function(e){console.log('Add function')
 		const data = await response.json();
 		alert('تمت العملية بنجاح');
 		addMemberModal.style.display = 'none';
-		notificationSystem.addNotification('assign', `New team member ${u.Fullname} added to ${u.Team}`);
+		notificationSystem.addNotification('assign', `New team member ${data.Fullname} added to ${data.Team}`);
+		DisplayUsers();
 	} catch (error) {
 		console.error("Error fetching data:", error);
-	}
+	} 
 })
 })
-//display users
+
+  //display users
 async function DisplayUsers(){
     try {
         const response = await fetch("http://localhost:3000/api/displayUser", {
@@ -1402,65 +1528,7 @@ async function DisplayUsers(){
         console.error("❌ خطأ في جلب الشكاوى:", error);
       }
 }
-/*
-let idUser;
-function createMemberElement(member) {
-	const div = document.createElement('div');
-	div.innerHTML = "";
-	div.className = 'team-member';
-	div.innerHTML = `
-		<div class="member-info">
-			<div class="member-avatar">
-				<i class='bx bx-user'></i>
-			</div>
-			<div class="member-details">
-				<h4>${member.name}</h4>
-				<p>${member.role} · ${member.email}</p>
-			</div>
-		</div>
-		<div class="member-actions">
-			<button class="edit" title="Edit Member">
-				<i class='bx bx-edit'></i>
-			</button>
-			<button class="delete" title="Remove Member">
-				<i class='bx bx-trash'></i>
-			</button>
-		</div>
-	`;
-	div.onclick = () => {
-		 idUser = member._id;
-	}
-	// Add edit functionality
-	div.querySelector('.edit').addEventListener('click', function() {
-		// Fill modal with current member data
-		document.getElementById('member-name').value = member.name;
-		document.getElementById('member-email').value = member.email;
-		document.getElementById('member-role').value = member.role;
-		document.getElementById('member-team').value = member.team;
-		document.getElementById('member-password').value = '';
-		
-		// Show modal
-		addMemberModal.style.display = 'flex';	
-		const btnAdd = document.getElementById('save-member');
-		// Change save button to edit mode
-		
-		btnAdd.textContent = 'Save Changes';
-		btnAdd.dataset.editing = 'true';
-		btnAdd.dataset.memberId = member.email; // Use email as unique id
 
-		// Store reference to this member element
-		addMemberModal.dataset.editingMember = '';
-		addMemberModal.editingMemberElement = div;
-	});
-	// Add delete functionality
-	div.querySelector('.delete').addEventListener('click', function() {
-		if (confirm('Are you sure you want to remove this member?')) {
-			div.remove();
-			notificationSystem.addNotification('status', `Team member ${member.name} has been removed`);
-		}
-	});
-	return div;
-}*/
 function getTeamIndex(teamValue) {
 	const teamMap = {
 		'tech-support': 1,
@@ -1539,126 +1607,7 @@ function renderUsers(user){
 	
 };
 
-/*	user.forEach(u => {console.log(u.Fullname);
-	if (u.Fullname && u.Email && u.Team && u.Role) {
-		if (btnAdd.dataset.editing === 'true') {
-			// Edit mode
-			const memberElement = addMemberModal.editingMemberElement;
-			memberElement.querySelector('.member-details h4').textContent = u.Fullname;
-			memberElement.querySelector('.member-details p').textContent = `${u.Role} · ${u.Email}`;
-			// Update member object for future edits
-			memberElement.memberData = { 
-				name: u.Fullname,
-                email: u.Email,
-                team: u.Team,
-                role: u.Role };
-
-			// Move to new team if changed 
-			const currentTeamContainer = memberElement.parentElement;
-			const newTeamContainer = document.querySelector(`.team-card:nth-child(${getTeamIndex(u.Team)}) .team-members`);
-			if (currentTeamContainer !== newTeamContainer) {
-				newTeamContainer.appendChild(memberElement);
-			}
-
-			// Reset modal
-			document.getElementById('add-member-form').reset();
-			addMemberModal.style.display = 'none';
-			saveMemberBtn.textContent = 'Add Member';
-			saveMemberBtn.dataset.editing = '';
-			saveMemberBtn.dataset.memberId = '';
-			addMemberModal.editingMemberElement = null;
-
-			notificationSystem.addNotification('status', `Team member ${u.Fullname} updated successfully`);
-		} else{
-			// Add new member mode
-			const memberElement = createMemberElement({
-				name: u.Fullname,
-                email: u.Email,
-                team: u.Team,
-                role: u.Role
-			});console.log(memberElement);
-			const teamContainer = document.querySelector(`.team-card:nth-child(${getTeamIndex(u.Team)}) .team-members`);
-			teamContainer.appendChild(memberElement);
-			document.getElementById('add-member-form').reset();
-		}
-	} else{
-		alert('Please fill in all fields');
-	}});
-}
-	
-}
-btnAdd.addEventListener('click', async function(e){
-	e.preventDefault();
-
-	const fullname = document.getElementById('member-name').value;
-	const email = document.getElementById('member-email').value;
-	const passwordTeam = document.getElementById('member-password').value;
-	const teamAssign = document.getElementById('member-team').value;
-	const roleTeam = document.getElementById('member-role').value;
-
-	const isEditing = btnAdd.dataset.editing === 'true';
-	const memberId = idUser;
-    console.log(idUser);
-	try {
-		let response;
-		if (isEditing) {
-			// UPDATE USER
-			response = await fetch(`http://localhost:3000/api/UpdateUser/${memberId}`, {
-				method: "PUT",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({ 
-					Fullname: fullname,
-					Email: email,
-					Password: passwordTeam,
-					Team: teamAssign,
-					Role: roleTeam 
-				})
-			});
-		} else {
-			// CREATE USER
-			response = await fetch("http://localhost:3000/api/CreateUser", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({
-					Fullname: fullname,
-					Email: email,
-					Password: passwordTeam,
-					Team: teamAssign,
-					Role: roleTeam 
-				}) 
-			});
-			
-		}
-
-		const data = await response.json();
-		alert('تمت العملية بنجاح');
-		addMemberModal.style.display = 'none';
-		DisplayUsers();
-
-		notificationSystem.addNotification('assign',
-			isEditing
-				? `Team member ${fullname} updated to ${teamAssign}`
-				: `New team member ${fullname} added to ${teamAssign}`
-		);
-
-		// Reset form and mode
-		document.getElementById('add-member-form').reset();
-		btnAdd.textContent = 'Add Member';
-		btnAdd.dataset.editing = '';
-		btnAdd.dataset.memberId = '';
-
-	} catch (error) {
-		console.error("Error fetching data:", error);
-	}
-});
-*/
-
-//Update user
-
+  //Update user
 async function UpdateUser(u){
 	btnAdd.replaceWith(btnAdd.cloneNode(true)); // Trick باش نضمن كل مرة نضيف مستمع واحد فقط
 	
@@ -1690,6 +1639,10 @@ async function UpdateUser(u){
 		  }
 		addMemberModal.style.display = 'none';
 		notificationSystem.addNotification('assign', ` team member ${u.Fullname} update to ${u.Team}`);
+
+		btnAdd.textContent = 'Add Member';
+		btnAdd.dataset.editing = 'false';
+
 	    DisplayUsers();
 	} catch (error) {
 		console.error("Error fetching data:", error);
@@ -1697,7 +1650,7 @@ async function UpdateUser(u){
 }},{ once: true }); 
 }
 
-//delet user
+  //delet user
 async function DeleteUser(user) { 
 	
 	try {

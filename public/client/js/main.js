@@ -317,16 +317,29 @@ function renderReclamations(reclamations) {
     containerList.innerHTML = ""; // نفرغ القديم
   
     reclamations.forEach(r => {
+        const dateOnly = r.createdAt.substring(0, 10);
       const item = document.createElement("div");
       item.className = 'complaint-item';
+      let statusClass;
+      let icon;
+		if(r.Status == 'Pending'){
+			statusClass = 'pending';
+            icon = 'fa-exclamation-circle';
+		}else if(r.Status == 'In Progress'){
+			statusClass = 'in-progress';
+            icon = 'fa-clock';
+		}else{  
+			statusClass = 'resolved'; 
+            icon = 'fa-check-circle';  
+		} 
       item.innerHTML = `
       <div class="complaint-header">
-            <span class="complaint-date">${r.createdAt}</span>
-            <span class="complaint-status resolved">
-                <i class="fas fa-check-circle"></i>
+            <span class="complaint-date">${dateOnly}</span>
+            <span class="complaint-status ${statusClass}">
+                <i class= "fas ${icon}"></i>
                 ${r.Status}
-            </span>
-        </div>
+            </span>  
+        </div> 
         <div class="complaint-content">
             <p class="complaint-text">${r.Complaint}</p>
             <div class="complaint-details">
