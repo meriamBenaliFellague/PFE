@@ -7,15 +7,16 @@
     --Font-weight1: 400;
     --Font-weight2: 600;
     --Font-weight3: 800;
-    /*colors*/
+    /*colorshsla(212, 52%, 79%, 0.808)*/
     --darck-blue: #085088;
-    --main-color: hsla(212, 52%, 79%, 0.808);
+    --main-color: #cce5ff;
+
     --box-shaow: 0 0 30px rgba(0,0,0, .2);
     --box-shadow: 0 0 10px rgba(0,0,0, .1);
     --white:#fff;
     --dark-grey:#333;
     --white-grey:#888;
-    --blue-btn:#7494ec;
+    --blue-btn:#4b9ef1;
    }
 
 * {
