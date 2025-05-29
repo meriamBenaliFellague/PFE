@@ -6,12 +6,11 @@
     <!-- Boxicons -->
 	<link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="style.css">
+
     <!-- jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-	<title>Admin-Dashboard</title>
-	
+    <title>Admin-Dashboard</title>
 </head>
 <body>
 <!-- SIDEBAR -->
@@ -33,12 +32,7 @@
 					<span class="text">Messages</span>
 				</a>
 			</li>
-			<li>
-				<a href="#" id="analytics-link">
-					<i class='bx bxs-doughnut-chart'></i>
-					<span class="text">Analytics</span>
-				</a>
-			</li>
+			
 			<li>
 				<a href="#" id="team-link">
 					<i class='bx bxs-group'></i>
@@ -54,7 +48,7 @@
 				</a>
 			</li>
 			<li>
-				<a href="/Home" class="logout">
+				<a href="#" class="logout">
 					<i class='bx bxs-log-out-circle'></i>
 					<span class="text">Logout</span>
 				</a>
@@ -80,7 +74,7 @@
 				<span class="num">0</span>
 			</a>
 			<a href="#" class="profile">
-				<i class='bx bx-user'></i>
+				<img src="assets/default-profile.png" alt="Admin Profile" id="navbar-profile-pic">
 			</a>
 			<!-- Add Notifications Dropdown -->
 			<div class="notifications-menu">
@@ -97,16 +91,16 @@
 		<main>
 			<!-- Messages Section -->
 			<div id="messages-section" style="display:none;">
-    <div class="head-title">
-        <div class="left">
-            <h1>Messages</h1>
-            <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
-                <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Messages</a></li>
-            </ul>
-        </div>
-    </div>
+				<div class="head-title">
+					<div class="left">
+						<h1>Messages</h1>
+						<ul class="breadcrumb">
+							<li><a href="#">Dashboard</a></li>
+							<li><i class='bx bx-chevron-right'></i></li>
+							<li><a class="active" href="#">Messages</a></li>
+						</ul>
+					</div>
+				</div>
 				<div class="messenger-container">
 					<!-- Conversations List -->
 					<div class="conversations-list">
@@ -117,11 +111,30 @@
 							</button>
 						</div>
 						<div class="conversations-search">
-							<input type="text" placeholder="Search conversations...">
+							<input type="text" id="message-search-input" placeholder="Search message...">
 							<i class='bx bx-search'></i>
 						</div>
-						<div class="conversations" id="conversations">
-							
+						<div class="conversations">
+							<div class="conversation active" data-conversation="admin">
+								<div class="conversation-avatar">
+									<i class='bx bx-user'></i>
+								</div>
+								<div class="conversation-info">
+									<div class="conversation-name">Admin</div>
+									<div class="conversation-preview">Welcome to the dashboard!</div>
+								</div>
+								<div class="conversation-time">10:30 AM</div>
+							</div>
+							<div class="conversation" data-conversation="system">
+								<div class="conversation-avatar">
+									<i class='bx bx-cog'></i>
+								</div>
+								<div class="conversation-info">
+									<div class="conversation-name">System</div>
+									<div class="conversation-preview">Your group assignment was updated</div>
+								</div>
+								<div class="conversation-time">Yesterday</div>
+							</div>
 						</div>
 					</div>
 
@@ -138,13 +151,25 @@
 								</div>
 							</div>
 						</div>
-						<div id="msg-container" class="chat-messages">
+						<div class="chat-messages">
+							<div class="message received">
+								<div class="message-content">
+									Welcome to the dashboard! Here you can manage users and groups.
+								</div>
+								<div class="message-time">10:30 AM</div>
+							</div>
+							<div class="message sent">
+								<div class="message-content">
+									Thank you! I'm excited to start using the dashboard.
+								</div>
+								<div class="message-time">10:32 AM</div>
+							</div>
 						</div>
-						<form action="" id="msg-form" class="chat-input">
-							<input type="text" id="msg-input" placeholder="Type a message...">
-							<button type="submit" class="send-btn">
-								<i class='bx bx-send'></i>
-						    </button>
+						<form class="chat-input" id="chat-form">
+							<input id="msg_input" type="text" placeholder="Type a message..." autocomplete="off" required />
+							<button class="send-btn" type="submit">
+								<i class="bx bx-send"></i>
+							</button>
 						</form>
 					</div>
 				</div>
@@ -186,66 +211,75 @@
 			<div id="team-section" style="display:none;">
 				<div class="head-title">
 					<div class="left">
-						<h1>Team Management</h1>
+						<h1>Meet our team</h1>
 						<ul class="breadcrumb">
 							<li><a href="#">Dashboard</a></li>
 							<li><i class='bx bx-chevron-right'></i></li>
 							<li><a class="active" href="#">Team</a></li>
 						</ul>
 					</div>
-					<button class="btn-add" id="add-member-btn">
-						<i class='bx bx-plus'></i>
-						<span class="text">Add New Member</span>
-					</button>
 				</div>
 
-				<!-- Team Groups -->
-				<div class="team-groups" id="team-groups">
-					<!-- Tech Support Team -->
-					<div class="team-card">
-						<div class="team-header">
-							<div class="team-icon">
-								<i class='bx bx-wrench'></i>
-							</div>
-							<div class="team-info">
-								<h3>Tech Support Team</h3>
-								<p>Technical support and maintenance</p>
-							</div>
+				<!-- Team Members Grid -->
+				<div class="team-members-grid" id="team-members-grid">
+					<div class="member-card">
+						<div class="member-photo-wrap">
+							<img src="https://randomuser.me/api/portraits/men/11.jpg" alt="Abdul Kean" class="member-photo">
+							
 						</div>
-						<div class="team-members">
-							<!-- Members will be added dynamically -->
-						</div>
-					</div>
-
-					<!-- Customer Service Team -->
-					<div class="team-card">
-						<div class="team-header">
-							<div class="team-icon">
-								<i class='bx bx-message-rounded-dots'></i>
+						<div class="member-info">
+							<h4>Abdul Kean</h4>
+							
+							<div class="member-actions">
+								<a href="#" title="Call"><i class='bx bx-phone-call'></i></a>
+								<a href="#" title="Video"><i class='bx bx-video'></i></a>
+								<a href="#" title="Chat"><i class='bx bx-chat'></i></a>
 							</div>
-							<div class="team-info">
-								<h3>Customer Service Team</h3>
-								<p>Customer support and assistance</p>
-							</div>
-						</div>
-						<div class="team-members">
-							<!-- Members will be added dynamically -->
 						</div>
 					</div>
-
-					<!-- Quality Team -->
-					<div class="team-card">
-						<div class="team-header">
-							<div class="team-icon">
-								<i class='bx bx-check-circle'></i>
-							</div>
-							<div class="team-info">
-								<h3>Quality Team</h3>
-								<p>Quality assurance and testing</p>
+					<div class="member-card">
+						<div class="member-photo-wrap">
+							<img src="https://randomuser.me/api/portraits/women/12.jpg" alt="Angela Moss" class="member-photo">
+							
+						</div>
+						<div class="member-info">
+							<h4>Angela Moss</h4>
+							
+							<div class="member-actions">
+								<a href="#" title="Call"><i class='bx bx-phone-call'></i></a>
+								<a href="#" title="Video"><i class='bx bx-video'></i></a>
+								<a href="#" title="Chat"><i class='bx bx-chat'></i></a>
 							</div>
 						</div>
-						<div class="team-members">
-							<!-- Members will be added dynamically -->
+					</div>
+					<div class="member-card">
+						<div class="member-photo-wrap">
+							<img src="https://randomuser.me/api/portraits/men/13.jpg" alt="Afiif Skunder" class="member-photo">
+							
+						</div>
+						<div class="member-info">
+							<h4>Afiif Skunder</h4>
+							
+							<div class="member-actions">
+								<a href="#" title="Call"><i class='bx bx-phone-call'></i></a>
+								<a href="#" title="Video"><i class='bx bx-video'></i></a>
+								<a href="#" title="Chat"><i class='bx bx-chat'></i></a>
+							</div>
+						</div>
+					</div>
+					<div class="member-card">
+						<div class="member-photo-wrap">
+							<img src="https://randomuser.me/api/portraits/women/14.jpg" alt="Anita Queen" class="member-photo">
+							
+						</div>
+						<div class="member-info">
+							<h4>Anita Queen</h4>
+							
+							<div class="member-actions">
+								<a href="#" title="Call"><i class='bx bx-phone-call'></i></a>
+								<a href="#" title="Video"><i class='bx bx-video'></i></a>
+								<a href="#" title="Chat"><i class='bx bx-chat'></i></a>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -302,45 +336,7 @@
 				</div>
 			</div>
 
-			<div id="analytics-section" style="display:none;">
-    <div class="head-title">
-        <div class="left">
-            <h1>Analytics</h1>
-            <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
-                <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Analytics</a></li>
-            </ul>
-        </div>
-        <a href="#" class="btn-download" id="download-pdf">
-            <i class='bx bxs-cloud-download' ></i>
-            <span class="text">Download PDF</span>
-        </a>
-    </div>
-    <ul class="box-info">
-        <li>
-            <i class='bx bxs-calendar-check' ></i>
-            <span class="text">
-                <h3>1020</h3>
-                <p>New Reclamation</p>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-group' ></i>
-            <span class="text">
-                <h3>2834</h3>
-                <p>Visitors</p>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-check-circle' ></i>
-            <span class="text">
-                <h3>156</h3>
-                <p>Completed Tasks</p>
-            </span>
-        </li>
-    </ul>
-</div>
+		
 
 			<div class="head-title">
 				<div class="left">
@@ -361,14 +357,11 @@
 				</a>
 			</div>
 
-			
-
-
 			<div class="table-data">
 				<div class="order">
 					<div class="head">
 						<h3>Recent Reclamation</h3>
-						<i class='bx bx-search' ></i>
+						<i class='bx bx-refresh' title="Refresh" style="cursor:pointer" id="refresh-reclamation"></i>
 						<i class='bx bx-filter' ></i>
 					</div>
 					<table>
@@ -376,11 +369,117 @@
 							<tr>
 								<th>User</th>
 								<th>Date Order</th>
-								<th>Assignee</th>
+								
 								<th>Status</th>
 							</tr>
 						</thead>
-						<tbody id="tbody">
+						<tbody>
+							<tr>
+								<td>
+									
+									<p>aya inas</p>
+								</td>
+								<td>01-10-2021</td>
+								<td>
+									<div class="status-actions">
+										<button class="status-icon-btn info-btn-modern" onclick="showComplaintInfo(this)" title="Complaint Info">
+											<i class='bx bx-info-circle'></i>
+										</button>
+										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
+											✔
+										</button>
+										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
+											✖
+										</button>
+									</div>
+								</td>
+								<td><span class="status pending">Pending</span></td>
+								
+							</tr>
+							<tr>
+								<td>
+									
+									<p>ben krouda gogo</p>
+								</td>
+								<td>01-10-2021</td>
+								<td>
+									<div class="status-actions">
+										<button class="status-icon-btn info-btn-modern" onclick="showComplaintInfo(this)" title="Complaint Info">
+											<i class='bx bx-info-circle'></i>
+										</button>
+										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
+											✔
+										</button>
+										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
+											✖
+										</button>
+									</div>
+								</td>
+								<td><span class="status pending">Pending</span></td>
+							</tr>
+							<tr>
+								<td>
+									
+									<p>Benali fellague mimi</p>
+								</td>
+								<td>01-10-2021</td>
+								<td>
+									<div class="status-actions">
+										<button class="status-icon-btn info-btn-modern" onclick="showComplaintInfo(this)" title="Complaint Info">
+											<i class='bx bx-info-circle'></i>
+										</button>
+										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
+											✔
+										</button>
+										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
+											✖
+										</button>
+									</div>
+								</td>
+								<td><span class="status pending">Pending</span></td>
+							</tr>
+							<tr>
+								<td>
+									
+									<p>kada besoltan ipti</p>
+								</td>
+								<td>01-10-2021</td>
+								<td>
+									<div class="status-actions">
+										<button class="status-icon-btn info-btn-modern" onclick="showComplaintInfo(this)" title="Complaint Info">
+											<i class='bx bx-info-circle'></i>
+										</button>
+										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
+											✔
+										</button>
+										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
+											✖
+										</button>
+									</div>
+								</td>
+								<td><span class="status pending">Pending</span></td>
+							</tr>
+							<tr>
+								<td>
+							
+									<p>luna fatima</p>
+								</td>
+								<td>01-10-2021</td>
+								<td>
+									<div class="status-actions">
+										<button class="status-icon-btn info-btn-modern" onclick="showComplaintInfo(this)" title="Complaint Info">
+											<i class='bx bx-info-circle'></i>
+										</button>
+										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
+											✔
+										</button>
+										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
+											✖
+										</button>
+									</div>
+								</td>
+								<td><span class="status pending">Pending</span></td>
+							</tr>
 						</tbody>
 					</table>
 				</div>
@@ -392,15 +491,15 @@
 					</div>
 					<ul class="todo-list">
 						<li class="completed">
-							<p>Assign tasks to Tech Support team</p>
+							<p>Follow up team performance</p>
 							<i class='bx bx-dots-vertical-rounded todo-actions'></i>
 						</li>
 						<li class="process">
-							<p>Review pending assignments</p>
+							<p>Review new complaints</p>
 							<i class='bx bx-dots-vertical-rounded todo-actions'></i>
 						</li>
 						<li class="not-completed">
-							<p>Follow up on completed tasks</p>
+							<p>Assign tasks to members</p>
 							<i class='bx bx-dots-vertical-rounded todo-actions'></i>
 						</li>
 					</ul>
@@ -717,18 +816,18 @@ let selectedGroupValue = null;
  });
 // Assign action
  document.querySelector('.assign-btn').addEventListener('click', function() {
-   if(selectedGroupValue) {
+   if(selectedAssignCell && selectedGroupValue) {
      // Hide the assign icon
      selectedAssignCell.querySelector('.assignee-icon').style.display = 'none';
      // Change the status to Process
-    /* const row = selectedAssignCell.closest('tr');
+     const row = selectedAssignCell.closest('tr');
      if(row) {
        const statusCell = row.querySelector('td:last-child span.status');
        if(statusCell) {
-         statusCell.textContent = 'In Progress';
+         statusCell.textContent = 'Process';
          statusCell.className = 'status process';
        }
-     }*/
+     }
      // Hide modal and overlay
      document.getElementById('assign-overlay').style.display = 'none';
      document.getElementById('assign-modal').style.display = 'none';
@@ -991,4 +1090,37 @@ document.getElementById('close-message-modal').onclick = function() {
         </div>
     </div>
 </div>
+
+<!-- Complaint Info Modal -->
+<div id="complaint-modal-overlay" class="complaint-modal-overlay" style="display:none;">
+  <div class="complaint-modal">
+    <div class="complaint-modal-header">
+      <button class="complaint-modal-close" onclick="closeComplaintInfoModal()" aria-label="Close">&times;</button>
+      <div class="complaint-modal-title">Complaint Details</div>
+    </div>
+    <div id="complaint-modal-body" class="complaint-modal-body"></div>
+  </div>
+</div>
+
+<script>
+function showComplaintInfo(btn) {
+  var row = btn.closest('tr');
+  var user = row.querySelector('td p').innerText;
+  var details = {
+    'aya inas': 'Complaint details for aya inas: ...',
+    'ben krouda gogo': 'Complaint details for ben krouda gogo: ...',
+    'Benali fellague mimi': 'Complaint details for Benali fellague mimi: ...',
+    'kada besoltan ipti': 'Complaint details for kada besoltan ipti: ...',
+    'luna fatima': 'Complaint details for luna fatima: ...'
+  };
+  var info = details[user] || 'No details available.';
+  document.getElementById('complaint-modal-body').innerText = info;
+  document.getElementById('complaint-modal-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeComplaintInfoModal() {
+  document.getElementById('complaint-modal-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
 </html>
