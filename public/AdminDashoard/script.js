@@ -1669,3 +1669,33 @@ async function DeleteUser(user) {
         console.error("❌ خطأ أثناء الحذف:", error.message);
     }
 }
+
+function showComplaintInfo(btn) {
+    var row = btn.closest('tr');
+    var user = row.querySelector('td p').innerText;
+    var details = {
+        'aya inas': 'Complaint details for aya inas: ...',
+        'ben krouda gogo': 'Complaint details for ben krouda gogo: ...',
+        'Benali fellague mimi': 'Complaint details for Benali fellague mimi: ...',
+        'kada besoltan ipti': 'Complaint details for kada besoltan ipti: ...',
+        'luna fatima': 'Complaint details for luna fatima: ...'
+    };
+    var info = details[user] || 'No details available.';
+    document.getElementById('complaint-modal-body').innerText = info;
+    document.getElementById('complaint-modal-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeComplaintInfoModal() {
+    document.getElementById('complaint-modal-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function changeStatus(btn, status) {
+    var row = btn.closest('tr');
+    var statusCell = row.querySelector('td:last-child span.status');
+    if (statusCell) {
+        statusCell.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusCell.className = 'status ' + status;
+    }
+}
