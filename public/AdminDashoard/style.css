@@ -2853,3 +2853,19 @@ body.dark .box-info.analytics li .text p {
 .status.failed {
     background: var(--red);
 }
+
+/* Delete Icon Styles */
+.delete-icon {
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: color 0.2s;
+}
+
+.delete-icon:hover {
+    color: #c82333;
+}
+
+.table-data .order table td:last-child {
+    text-align: center;
+}

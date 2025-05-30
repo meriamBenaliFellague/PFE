@@ -1699,3 +1699,43 @@ function changeStatus(btn, status) {
         statusCell.className = 'status ' + status;
     }
 }
+
+// Function to handle delete action
+function handleDelete(rowId) {
+    if (confirm('Are you sure you want to delete this complaint?')) {
+        // Here you would typically make an API call to delete the complaint
+        // For now, we'll just remove the row from the table
+        const row = document.querySelector(`tr[data-id="${rowId}"]`);
+        if (row) {
+            row.remove();
+        }
+    }
+}
+
+// Function to add delete icon to a row
+function addDeleteIcon(row) {
+    const actionsCell = document.createElement('td');
+    const deleteIcon = document.createElement('i');
+    deleteIcon.className = 'bx bx-trash delete-icon';
+    deleteIcon.onclick = () => handleDelete(row.getAttribute('data-id'));
+    actionsCell.appendChild(deleteIcon);
+    row.appendChild(actionsCell);
+}
+
+// Add delete icons to existing rows
+document.querySelectorAll('#tbody tr').forEach(row => {
+    if (!row.querySelector('.delete-icon')) {
+        addDeleteIcon(row);
+    }
+});
+
+// Modify the function that adds new rows to include delete icon
+const originalAddRow = window.addRow; // Store the original function if it exists
+window.addRow = function(data) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-id', data.id);
+    // Add your existing row content here
+    // ...
+    addDeleteIcon(row);
+    document.getElementById('tbody').appendChild(row);
+};
