@@ -419,7 +419,10 @@ body {
 	color: var(--dark);	
 }
 
-
+.status.completed {
+    background: #1976d2 !important;
+    color: #fff !important;
+}
 
 
 
