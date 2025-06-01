@@ -369,14 +369,12 @@
 							<tr>
 								<th>User</th>
 								<th>Date Order</th>
-								
 								<th>Status</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
 								<td>
-									
 									<p>aya inas</p>
 								</td>
 								<td>01-10-2021</td>
@@ -388,17 +386,13 @@
 										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
 											✔
 										</button>
-										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
-											✖
-										</button>
 									</div>
+									
 								</td>
-								<td><span class="status pending">Pending</span></td>
-								
+								<td><span class="status process">Progress</span></td>
 							</tr>
 							<tr>
 								<td>
-									
 									<p>ben krouda gogo</p>
 								</td>
 								<td>01-10-2021</td>
@@ -410,16 +404,12 @@
 										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
 											✔
 										</button>
-										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
-											✖
-										</button>
 									</div>
 								</td>
-								<td><span class="status pending">Pending</span></td>
+								<td><span class="status process">Progress</span></td>
 							</tr>
 							<tr>
 								<td>
-									
 									<p>Benali fellague mimi</p>
 								</td>
 								<td>01-10-2021</td>
@@ -431,16 +421,12 @@
 										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
 											✔
 										</button>
-										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
-											✖
-										</button>
 									</div>
 								</td>
-								<td><span class="status pending">Pending</span></td>
+								<td><span class="status process">Progress</span></td>
 							</tr>
 							<tr>
 								<td>
-									
 									<p>kada besoltan ipti</p>
 								</td>
 								<td>01-10-2021</td>
@@ -452,16 +438,12 @@
 										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
 											✔
 										</button>
-										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
-											✖
-										</button>
 									</div>
 								</td>
-								<td><span class="status pending">Pending</span></td>
+								<td><span class="status process">Progress</span></td>
 							</tr>
 							<tr>
 								<td>
-							
 									<p>luna fatima</p>
 								</td>
 								<td>01-10-2021</td>
@@ -473,12 +455,9 @@
 										<button class="status-icon-btn completed-btn" onclick="changeStatus(this, 'completed')" title="Mark as Completed">
 											✔
 										</button>
-										<button class="status-icon-btn failed-btn" onclick="changeStatus(this, 'failed')" title="Mark as Failed">
-											✖
-										</button>
 									</div>
 								</td>
-								<td><span class="status pending">Pending</span></td>
+								<td><span class="status process">Progress</span></td>
 							</tr>
 						</tbody>
 					</table>
@@ -1123,4 +1102,22 @@ function closeComplaintInfoModal() {
   document.body.style.overflow = '';
 }
 </script>
+
+<!-- Custom Confirmation Dialog -->
+<div id="confirmation-dialog" class="confirmation-dialog">
+    <div class="confirmation-content">
+        <div class="confirmation-header">
+            <h3>Confirm Action</h3>
+            <button class="close-confirmation">&times;</button>
+        </div>
+        <div class="confirmation-body">
+            <i class='bx bx-check-circle'></i>
+            <p>Are you sure you want to mark this complaint as completed?</p>
+        </div>
+        <div class="confirmation-footer">
+            <button class="btn-cancel">Cancel</button>
+            <button class="btn-confirm">Confirm</button>
+        </div>
+    </div>
+</div>
 </html>

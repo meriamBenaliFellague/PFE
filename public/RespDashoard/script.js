@@ -220,15 +220,38 @@ function changeStatus(btn, status) {
     const statusCell = row.querySelector('td:last-child .status');
     if (!statusCell) return;
     if (status === 'completed') {
-        statusCell.textContent = 'Completed';
-        statusCell.className = 'status completed';
-        statusCell.style.background = '#1976d2';
-        statusCell.style.color = '#fff';
-    } else if (status === 'failed') {
-        statusCell.textContent = 'Failed';
-        statusCell.className = 'status failed';
-        statusCell.style.background = '#d32f2f';
-        statusCell.style.color = '#fff';
+        // Show custom confirmation dialog
+        const dialog = document.getElementById('confirmation-dialog');
+        dialog.classList.add('show');
+
+        // Handle confirm button
+        const confirmBtn = dialog.querySelector('.btn-confirm');
+        confirmBtn.onclick = function() {
+            statusCell.textContent = 'Completed';
+            statusCell.className = 'status completed';
+            statusCell.style.background = '#1976d2';
+            statusCell.style.color = '#fff';
+            dialog.classList.remove('show');
+        };
+
+        // Handle cancel button
+        const cancelBtn = dialog.querySelector('.btn-cancel');
+        cancelBtn.onclick = function() {
+            dialog.classList.remove('show');
+        };
+
+        // Handle close button
+        const closeBtn = dialog.querySelector('.close-confirmation');
+        closeBtn.onclick = function() {
+            dialog.classList.remove('show');
+        };
+
+        // Close dialog when clicking outside
+        dialog.onclick = function(e) {
+            if (e.target === dialog) {
+                dialog.classList.remove('show');
+            }
+        };
     }
 }
 
